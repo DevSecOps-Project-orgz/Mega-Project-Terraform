@@ -87,7 +87,8 @@ resource "aws_security_group" "devopsshack_node_sg" {
 }
 
 resource "aws_eks_cluster" "devopsshack" {
-  name     = "devopsshack-cluster"
+  # FIX 3: Renamed to avoid ResourceInUseException
+  name     = "devopsshack-cluster-v2"
   role_arn = aws_iam_role.devopsshack_cluster_role.arn
 
   vpc_config {
@@ -116,7 +117,7 @@ resource "aws_eks_node_group" "devopsshack" {
     min_size     = 1
   }
 
-  # Fixed: Eligible for Free Tier
+  # FIX 1: Eligible for Free Tier
   instance_types = ["t3.micro"]
 
   remote_access {
@@ -126,7 +127,7 @@ resource "aws_eks_node_group" "devopsshack" {
 }
 
 resource "aws_iam_role" "devopsshack_cluster_role" {
-  # Fixed: Appended -v2 to avoid EntityAlreadyExists conflict
+  # FIX 2: Appended -v2 to avoid EntityAlreadyExists conflict
   name = "devopsshack-cluster-role-v2"
 
   assume_role_policy = jsonencode({
@@ -145,7 +146,7 @@ resource "aws_iam_role_policy_attachment" "devopsshack_cluster_role_policy" {
 }
 
 resource "aws_iam_role" "devopsshack_node_group_role" {
-  # Fixed: Appended -v2 to avoid EntityAlreadyExists conflict
+  # FIX 2: Appended -v2 to avoid EntityAlreadyExists conflict
   name = "devopsshack-node-group-role-v2"
 
   assume_role_policy = jsonencode({

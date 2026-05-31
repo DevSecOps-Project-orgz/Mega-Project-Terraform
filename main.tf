@@ -4,10 +4,7 @@ provider "aws" {
 
 resource "aws_vpc" "devopsshack_vpc" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "devopsshack-vpc"
-  }
+  tags = { Name = "devopsshack-vpc" }
 }
 
 resource "aws_subnet" "devopsshack_subnet" {
@@ -16,31 +13,21 @@ resource "aws_subnet" "devopsshack_subnet" {
   cidr_block              = cidrsubnet(aws_vpc.devopsshack_vpc.cidr_block, 8, count.index)
   availability_zone       = element(["ap-south-1a", "ap-south-1b"], count.index)
   map_public_ip_on_launch = true
-
-  tags = {
-    Name = "devopsshack-subnet-${count.index}"
-  }
+  tags = { Name = "devopsshack-subnet-${count.index}" }
 }
 
 resource "aws_internet_gateway" "devopsshack_igw" {
   vpc_id = aws_vpc.devopsshack_vpc.id
-
-  tags = {
-    Name = "devopsshack-igw"
-  }
+  tags = { Name = "devopsshack-igw" }
 }
 
 resource "aws_route_table" "devopsshack_route_table" {
   vpc_id = aws_vpc.devopsshack_vpc.id
-
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.devopsshack_igw.id
   }
-
-  tags = {
-    Name = "devopsshack-route-table"
-  }
+  tags = { Name = "devopsshack-route-table" }
 }
 
 resource "aws_route_table_association" "devopsshack_association" {
@@ -51,44 +38,35 @@ resource "aws_route_table_association" "devopsshack_association" {
 
 resource "aws_security_group" "devopsshack_cluster_sg" {
   vpc_id = aws_vpc.devopsshack_vpc.id
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "devopsshack-cluster-sg"
-  }
+  tags = { Name = "devopsshack-cluster-sg" }
 }
 
 resource "aws_security_group" "devopsshack_node_sg" {
   vpc_id = aws_vpc.devopsshack_vpc.id
-
   ingress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "devopsshack-node-sg"
-  }
+  tags = { Name = "devopsshack-node-sg" }
 }
 
 resource "aws_eks_cluster" "devopsshack" {
-  # FIX 3: Renamed to avoid ResourceInUseException
-  name     = "devopsshack-cluster-v2"
+  # Bumped to v3
+  name     = "devopsshack-cluster-v3"
   role_arn = aws_iam_role.devopsshack_cluster_role.arn
 
   vpc_config {
@@ -107,7 +85,7 @@ resource "aws_eks_addon" "ebs_csi_driver" {
 
 resource "aws_eks_node_group" "devopsshack" {
   cluster_name    = aws_eks_cluster.devopsshack.name
-  node_group_name = "devopsshack-node-group"
+  node_group_name = "devopsshack-node-group-v3"
   node_role_arn   = aws_iam_role.devopsshack_node_group_role.arn
   subnet_ids      = aws_subnet.devopsshack_subnet[*].id
 
@@ -117,7 +95,6 @@ resource "aws_eks_node_group" "devopsshack" {
     min_size     = 1
   }
 
-  # FIX 1: Eligible for Free Tier
   instance_types = ["t3.micro"]
 
   remote_access {
@@ -127,8 +104,8 @@ resource "aws_eks_node_group" "devopsshack" {
 }
 
 resource "aws_iam_role" "devopsshack_cluster_role" {
-  # FIX 2: Appended -v2 to avoid EntityAlreadyExists conflict
-  name = "devopsshack-cluster-role-v2"
+  # Bumped to v3
+  name = "devopsshack-cluster-role-v3"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -146,8 +123,8 @@ resource "aws_iam_role_policy_attachment" "devopsshack_cluster_role_policy" {
 }
 
 resource "aws_iam_role" "devopsshack_node_group_role" {
-  # FIX 2: Appended -v2 to avoid EntityAlreadyExists conflict
-  name = "devopsshack-node-group-role-v2"
+  # Bumped to v3
+  name = "devopsshack-node-group-role-v3"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
